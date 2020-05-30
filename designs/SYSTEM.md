@@ -21,6 +21,24 @@ written in TOML, config file will contain:
 
 ## plugins.
 
+using the built-in [plugins system for golang](https://golang.org/pkg/plugin/), a configurable directory or directories will be scanned for symbol files (`.so`). all found plugins will be checked to ensure they implement required methods and fields (see below) as well as other behavior-altering fields.
+
+required methods:
+
+- Validate() - defines behavior necessary to bootstrap plugin (e.g.: provide hash of plugin)
+- Register() - defines behavior post-successful validation (e.g.: bootstrap persistence, read configuration, etc.)
+- ListCommands() - list all symbols which can be called through the plugin, defined as an array or other list-derived data structure. (e.g.: `["whoami", "echo", "kick", "ban"]`)
+
+required fields:
+
+- author
+- email
+- version
+
+configuration fields:
+
+- scopes - define the scopes and/or discord events which the plugin needs access to
+
 ### base.
 
 `.echo` - echo's back a message.
