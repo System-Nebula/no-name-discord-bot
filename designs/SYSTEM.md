@@ -37,3 +37,6 @@ this plugin will require being able to read all message events sent to the serve
 
 idk.
 
+## managing secrets.
+
+mozilla sops? AH?!
