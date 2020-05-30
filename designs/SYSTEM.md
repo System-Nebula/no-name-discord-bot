@@ -25,9 +25,9 @@ using the built-in [plugins system for golang](https://golang.org/pkg/plugin/), 
 
 required methods:
 
-- Validate() - defines behavior necessary to bootstrap plugin (e.g.: provide hash of plugin)
-- Register() - defines behavior post-successful validation (e.g.: bootstrap persistence, read configuration, etc.)
-- ListCommands() - list all symbols which can be called through the plugin, defined as an array or other list-derived data structure. (e.g.: `["whoami", "echo", "kick", "ban"]`)
+- `Validate()` - defines behavior necessary to bootstrap plugin (e.g.: provide hash of plugin)
+- `Register()` - defines behavior post-successful validation (e.g.: bootstrap persistence, read configuration, etc.)
+- `ListCommands()` - list all symbols which can be called through the plugin, defined as an array or other list-derived data structure. (e.g.: `["whoami", "echo", "kick", "ban"]`)
 
 required fields:
 
