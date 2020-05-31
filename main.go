@@ -6,10 +6,23 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/BurntSushi/toml"
 	"github.com/bwmarrin/discordgo"
 )
 
+type Conf struct {
+	Authors        []string
+	DiscordTokenEV string
+}
+
 func main() {
+	var c Conf
+
+	if _, err := toml.Decode(tomlData, &conf); err != nil {
+		fmt.Println("Problems reading toml config file")
+	}
+	fmt.Println(c.Authors)
+
 	t := os.Getenv("DISCORD_BOT_TOKEN")
 
 	d, err := discordgo.New("Bot " + t)
