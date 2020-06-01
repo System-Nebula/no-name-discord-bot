@@ -11,7 +11,7 @@ import (
 type conf struct {
 }
 
-// GetConfig -- get configuration values from a TOML file containing
+// GetConfig -- get configuration values from disk
 func GetConfig() toml.MetaData {
 	var c conf
 	d := getConfigFromFile("config.toml")
