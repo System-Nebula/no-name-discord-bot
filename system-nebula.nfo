@@ -1,0 +1,6 @@
+[system-nebula]
+name = "no-name-discord-bot"
+authors = ["nich0s <a real name>", "", ""]
+github = "https://github.com/System-Nebula/no-name-discord-bot"
+description = "a pluggable discord bot with a security slant."
+license = "MIT"

@@ -2,43 +2,41 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/BurntSushi/toml"
+	"github.com/System-Nebula/no-name-discord-bot/config"
+
 	"github.com/bwmarrin/discordgo"
 )
 
-type Conf struct {
-	Authors        []string
-	DiscordTokenEV string
-}
-
 func main() {
-	var c Conf
-
-	if _, err := toml.Decode(tomlData, &conf); err != nil {
-		fmt.Println("Problems reading toml config file")
-	}
-	fmt.Println(c.Authors)
-
 	t := os.Getenv("DISCORD_BOT_TOKEN")
+	if t == "" {
+		log.Fatal("no token was provided.")
+	}
 
 	d, err := discordgo.New("Bot " + t)
 	if err != nil {
-		fmt.Println("error establishing discord session, err=", err)
-		os.Exit(1)
+		log.Fatal("error establishing discord session, err=", err)
 	}
 
-	// add a handler
+	mainConfig := config.GetConfig()
+	fmt.Println(mainConfig)
+
+	// add a handler - a list of supported event types; possibly all of them at some point.
 	d.AddHandler(onMsgCreate)
 
 	d.Open()
+	fmt.Println("connection established...")
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-c
+	fmt.Println("connection closing...")
 	d.Close()
+	fmt.Println("connection closed.")
 }
 
 func onMsgCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
