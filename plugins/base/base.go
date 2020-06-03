@@ -1,7 +1,7 @@
 package base
 
 import (
-	"fmt"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -10,8 +10,9 @@ import (
 func Handle(s *discordgo.Session, e *discordgo.Event) {
 	if e.Type == "MESSAGE_CREATE" {
 		event := e.Struct.(*discordgo.MessageCreate)
-		fmt.Println("it works")
-		switch event.Content {
+		msgSplice := strings.Fields(event.content)
+
+		switch msgSplice[0] {
 		case ".echo":
 			echoMessage(event, s)
 		}
@@ -22,6 +23,5 @@ func echoMessage(m *discordgo.MessageCreate, s *discordgo.Session) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
-
 	s.ChannelMessageSend(m.ChannelID, m.Content)
 }
