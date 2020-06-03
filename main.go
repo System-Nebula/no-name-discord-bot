@@ -9,7 +9,6 @@ import (
 	"syscall"
 
 	"github.com/System-Nebula/no-name-discord-bot/plugins/base"
-
 	"github.com/bwmarrin/discordgo"
 )
 
