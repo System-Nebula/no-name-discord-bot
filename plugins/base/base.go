@@ -9,11 +9,16 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+// A plugin-scoped map for tracking the time of the last activity of a user; limited to message
+var lastSeenTimers = make(map[string]time.Time)
+
 // Handle - the word Handle
 func Handle(s *discordgo.Session, e *discordgo.Event) {
 	if e.Type == "MESSAGE_CREATE" {
 		mc := e.Struct.(*discordgo.MessageCreate)
 		msgSplice := strings.Fields(mc.Content)
+
+		lastSeenTimers[mc.Author.ID] = time.Now()
 
 		if len(msgSplice) == 0 {
 			// if the message is nil, fail safely
@@ -29,6 +34,8 @@ func Handle(s *discordgo.Session, e *discordgo.Event) {
 			rolesMessage(mc, s)
 		case ".fbi":
 			fbiMessage(mc, s)
+		case ".lastseen":
+			lastSeen(mc, s)
 		}
 
 	}
@@ -39,6 +46,39 @@ func echoMessage(m *discordgo.MessageCreate, s *discordgo.Session, content strin
 		return
 	}
 	s.ChannelMessageSend(m.ChannelID, content)
+}
+
+// Command: .lastseen
+func lastSeen(m *discordgo.MessageCreate, s *discordgo.Session) {
+	if m.Author.ID == s.State.User.ID {
+		return
+	}
+
+		// check to see that targets are present: "@author command @target"
+		c := strings.Fields(m.Content)
+		if len(c) < 2 {
+			uc, err := s.UserChannelCreate(m.Author.ID)
+			if err != nil {
+				fmt.Println("unable to create DM with user, user=%s", uc)
+				return
+			}
+			s.ChannelMessageSend(uc.ID, "usage: .lastseen @username")
+			return
+		}
+	
+		// get user ID from content
+		u, err := getUser(c[1], s)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+	t, ok := lastSeenTimers[u.ID]
+	if !ok {
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("%s has not been seen.", u.String()))
+		return
+	}
+	s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("%s's last message was sent at %s", u.String(), t.UTC()))
 }
 
 // Command: .slap
