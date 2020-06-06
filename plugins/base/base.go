@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -40,10 +41,23 @@ func echoMessage(m *discordgo.MessageCreate, s *discordgo.Session, content strin
 	s.ChannelMessageSend(m.ChannelID, content)
 }
 
+// Command: .slap
+var troutSlapTimers = make(map[string]time.Time)
+
 func troutSlap(m *discordgo.MessageCreate, s *discordgo.Session) {
+	timeout := time.Duration(10*time.Second)
+
 	// required check to disallow bot looping
 	if m.Author.ID == s.State.User.ID {
 		return
+	}
+
+	// get debounce timer value for user
+	t, ok := troutSlapTimers[m.Author.ID]
+	if ok {
+		if time.Now().Sub(t) < timeout {
+			return
+		}
 	}
 
 	// check to see that targets are present: "@author command @target"
@@ -66,6 +80,9 @@ func troutSlap(m *discordgo.MessageCreate, s *discordgo.Session) {
 	}
 
 	s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("_slaps %s around a bit with a large trout._", u.Mention()))
+	
+	// set debounce timer value for user
+	troutSlapTimers[m.Author.ID] = time.Now()
 }
 
 func isRoleMember(s *discordgo.Session, UID string, GID string, RoleName string) bool {
