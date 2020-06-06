@@ -46,7 +46,7 @@ func onMsgCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	fmt.Println(m.Content)
+	fmt.Println(m.Author.String() + " - " + m.Content)
 }
 
 func readFromFile(file string) string {
