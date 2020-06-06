@@ -2,6 +2,7 @@ package base
 
 import (
 	"fmt"
+	"math/rand"
 	"regexp"
 	"strings"
 	"time"
@@ -85,7 +86,7 @@ func lastSeen(m *discordgo.MessageCreate, s *discordgo.Session) {
 var troutSlapTimers = make(map[string]time.Time)
 
 func troutSlap(m *discordgo.MessageCreate, s *discordgo.Session) {
-	timeout := time.Duration(10*time.Second)
+	timeout := 10 * time.Second
 
 	// required check to disallow bot looping
 	if m.Author.ID == s.State.User.ID {
@@ -108,6 +109,7 @@ func troutSlap(m *discordgo.MessageCreate, s *discordgo.Session) {
 			fmt.Println("unable to create DM with user, user=%s", uc)
 			return
 		}
+
 		s.ChannelMessageSend(uc.ID, "usage: .slap @username")
 		return
 	}
@@ -118,9 +120,12 @@ func troutSlap(m *discordgo.MessageCreate, s *discordgo.Session) {
 		fmt.Println(err)
 		return
 	}
-
-	s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("_slaps %s around a bit with a large trout._", u.Mention()))
-	
+	HitChance := rand.Intn(6-1) + 1
+	if HitChance != 1 {
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("_slaps %s around a bit with a large trout._", u.Mention()))
+	} else {
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("_ in an attempt to slap %s around; you fall on your ass and get a mouthful of large trout._", u.Mention()))
+	}
 	// set debounce timer value for user
 	troutSlapTimers[m.Author.ID] = time.Now()
 }
