@@ -25,11 +25,11 @@ func Handle(s *discordgo.Session, e *discordgo.Event) {
 		case ".slap":
 			troutSlap(mc, s)
 			// check user permissions here or in function?
-			echoMessage(event, s, strings.Join(msgSplice[1:], " "))
+			echoMessage(mc, s, strings.Join(msgSplice[1:], " "))
 		case ".roles":
-			rolesMessage(event, s)
+			rolesMessage(mc, s)
 		case ".fbi":
-			fbiMessage(event, s)
+			fbiMessage(mc, s)
 		}
 
 	}
@@ -83,6 +83,7 @@ func getUserFromContent(s *discordgo.Session, data string) (user *discordgo.User
 	}
 
 	return uo, nil
+}
 
 func IsRoleMember(s *discordgo.Session, UID string, GID string, RoleName string) bool {
 	U, _ := s.GuildMember(GID, UID)
