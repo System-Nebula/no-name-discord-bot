@@ -24,8 +24,6 @@ func Handle(s *discordgo.Session, e *discordgo.Event) {
 			echoMessage(mc, s, strings.Join(msgSplice[1:], " "))
 		case ".slap":
 			troutSlap(mc, s)
-			// check user permissions here or in function?
-			echoMessage(mc, s, strings.Join(msgSplice[1:], " "))
 		case ".roles":
 			rolesMessage(mc, s)
 		case ".fbi":
