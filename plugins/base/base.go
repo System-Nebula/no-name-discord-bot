@@ -46,15 +46,20 @@ func troutSlap(m *discordgo.MessageCreate, s *discordgo.Session) {
 		return
 	}
 
-	// check to see that targets are present: "command @target"
+	// check to see that targets are present: "@author command @target"
 	c := strings.Fields(m.Content)
 	if len(c) < 2 {
-		fmt.Println("not enough args.")
+		uc, err := s.UserChannelCreate(m.Author.ID)
+		if err != nil {
+			fmt.Println("unable to create DM with user, user=%s", uc)
+			return
+		}
+		s.ChannelMessageSend(uc.ID, "usage: .slap @username")
 		return
 	}
 
 	// get user ID from content
-	u, err := getUserFromContent(s, c[1])
+	u, err := getUser(c[1], s)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -63,27 +68,7 @@ func troutSlap(m *discordgo.MessageCreate, s *discordgo.Session) {
 	s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("_slaps %s around a bit with a large trout._", u.Mention()))
 }
 
-func getUserFromContent(s *discordgo.Session, data string) (user *discordgo.User, err error) {
-	rex, err := regexp.Compile("[^0-9]+")
-	if err != nil {
-		return nil, err
-	}
-
-	pu := rex.ReplaceAllString(data, "")
-
-	uo, err := s.User(pu)
-	if err != nil {
-		return nil, err
-	}
-
-	if uo == nil {
-		return nil, fmt.Errorf("unable to find a user, value=%s", data)
-	}
-
-	return uo, nil
-}
-
-func IsRoleMember(s *discordgo.Session, UID string, GID string, RoleName string) bool {
+func isRoleMember(s *discordgo.Session, UID string, GID string, RoleName string) bool {
 	U, _ := s.GuildMember(GID, UID)
 	GuildRoles, _ := s.GuildRoles(GID)
 	for _, e := range U.Roles {
@@ -99,7 +84,7 @@ func IsRoleMember(s *discordgo.Session, UID string, GID string, RoleName string)
 }
 
 func fbiMessage(m *discordgo.MessageCreate, s *discordgo.Session) {
-	b := IsRoleMember(s, m.Author.ID, m.GuildID, "FBI")
+	b := isRoleMember(s, m.Author.ID, m.GuildID, "FBI")
 	if b == true {
 		s.ChannelMessageSend(m.ChannelID, "Its not safe to talk here..")
 	} else {
@@ -121,4 +106,28 @@ func rolesMessage(m *discordgo.MessageCreate, s *discordgo.Session) {
 			}
 		}
 	}
+}
+
+func getUser(data string, s *discordgo.Session) (user *discordgo.User, err error) {
+	if !strings.HasPrefix(data, "<@!") {
+		return nil, fmt.Errorf("invalid user, value=%s", data)
+	}
+
+	rex, err := regexp.Compile("[^0-9]+")
+	if err != nil {
+		return nil, err
+	}
+
+	pu := rex.ReplaceAllString(data, "")
+
+	uo, err := s.User(pu)
+	if err != nil {
+		return nil, err
+	}
+
+	if uo == nil {
+		return nil, fmt.Errorf("unable to find a user, value=%s", data)
+	}
+
+	return uo, nil
 }
