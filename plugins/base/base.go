@@ -37,6 +37,11 @@ func Handle(s *discordgo.Session, e *discordgo.Event) {
 			fbiMessage(mc, s)
 		case ".lastseen":
 			lastSeen(mc, s)
+		case ".rest":
+			rest(mc, s)
+		case ".attack":
+			atk(mc, s)
+
 		}
 
 	}
@@ -55,24 +60,24 @@ func lastSeen(m *discordgo.MessageCreate, s *discordgo.Session) {
 		return
 	}
 
-		// check to see that targets are present: "@author command @target"
-		c := strings.Fields(m.Content)
-		if len(c) < 2 {
-			uc, err := s.UserChannelCreate(m.Author.ID)
-			if err != nil {
-				fmt.Println("unable to create DM with user, user=%s", uc)
-				return
-			}
-			s.ChannelMessageSend(uc.ID, "usage: .lastseen @username")
-			return
-		}
-	
-		// get user ID from content
-		u, err := getUser(c[1], s)
+	// check to see that targets are present: "@author command @target"
+	c := strings.Fields(m.Content)
+	if len(c) < 2 {
+		uc, err := s.UserChannelCreate(m.Author.ID)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("unable to create DM with user, user=%s", uc)
 			return
 		}
+		s.ChannelMessageSend(uc.ID, "usage: .lastseen @username")
+		return
+	}
+
+	// get user ID from content
+	u, err := getUser(c[1], s)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	t, ok := lastSeenTimers[u.ID]
 	if !ok {
@@ -84,6 +89,83 @@ func lastSeen(m *discordgo.MessageCreate, s *discordgo.Session) {
 
 // Command: .slap
 var troutSlapTimers = make(map[string]time.Time)
+var restTimers = make(map[string]time.Time)
+
+var maxHP = make(map[string]int)
+var userHP = make(map[string]int)
+
+var playerSheets = make(map[string]*charactersSheet)
+
+type charactersSheet struct {
+	maxHP  int
+	UserHP int
+}
+
+func newPlayer(ID string) {
+	playerSheets[ID] = &charactersSheet{
+		maxHP:  10,
+		UserHP: 10,
+	}
+}
+
+func atk(m *discordgo.MessageCreate, s *discordgo.Session) {
+	if m.Author.ID == s.State.User.ID {
+		return
+	}
+
+	c := strings.Fields(m.Content)
+	if len(c) < 2 {
+		return
+	}
+
+	if len(m.Mentions) == 0 {
+		return
+	}
+	target := m.Mentions[0]
+	targetSheet, ok := playerSheets[target.ID]
+	if !ok {
+		s.ChannelMessageSend(m.ChannelID, "Targeted player does not have a character sheet yet")
+	} else {
+		// have a valid target
+		// see how much health they have
+		if targetSheet.UserHP > 1 {
+			playerSheets[target.ID].UserHP -= 1
+			s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("DEBUG - Assign %s -1 health", target.Username))
+		} else {
+			s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("%s be dead already", target.Username))
+
+		}
+	}
+}
+
+func rest(m *discordgo.MessageCreate, s *discordgo.Session) {
+	// mostly redundant boilerplate code
+	timeout := 60 * time.Second
+	if m.Author.ID == s.State.User.ID {
+		return
+	}
+
+	t, ok := restTimers[m.Author.ID]
+	if ok {
+		if time.Now().Sub(t) < timeout {
+			return
+		}
+	}
+	// TODO Usage for rest
+
+	// Check if player stats exist
+	_, ok = playerSheets[m.Author.ID]
+	if !ok {
+		newPlayer(m.Author.ID)
+	}
+
+	// Check if max health or send rest message
+	if playerSheets[m.Author.ID].UserHP == playerSheets[m.Author.ID].maxHP {
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Why Rest? %s you have full health", m.Author.Username))
+	} else {
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Get some rest %s, you only have %d hp left", m.Author.Username, playerSheets[m.Author.ID].UserHP))
+	}
+}
 
 func troutSlap(m *discordgo.MessageCreate, s *discordgo.Session) {
 	timeout := 10 * time.Second
