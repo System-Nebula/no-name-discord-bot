@@ -97,6 +97,7 @@ func reminder(m *discordgo.MessageCreate, s *discordgo.Session) {
 	if err != nil {
 		fmt.Println("problem with atoi")
 		s.ChannelMessageSend(m.ChannelID, "he was right, atoi err...")
+
 		return
 	}
 	timer := time.AfterFunc(time.Second*time.Duration(itime), func() {
