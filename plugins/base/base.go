@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -41,7 +42,8 @@ func Handle(s *discordgo.Session, e *discordgo.Event) {
 			rest(mc, s)
 		case ".attack":
 			atk(mc, s)
-
+		case ".remindme":
+			go reminder(mc, s)
 		}
 
 	}
@@ -85,6 +87,25 @@ func lastSeen(m *discordgo.MessageCreate, s *discordgo.Session) {
 		return
 	}
 	s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("%s's last message was sent at %s", u.String(), t.UTC()))
+}
+
+func reminder(m *discordgo.MessageCreate, s *discordgo.Session) {
+
+	// take the given length of time and create a timer in seconds for the duration
+	stime := strings.Fields(m.Content)[1]
+	itime, err := strconv.Atoi(stime)
+	if err != nil {
+		fmt.Println("problem with atoi")
+		s.ChannelMessageSend(m.ChannelID, "he was right, atoi err...")
+	}
+	timer := time.AfterFunc(time.Second*time.Duration(itime), func() {
+		fmt.Println("timer stopped")
+		s.ChannelMessageSend(m.ChannelID, "It's time to do that thing...")
+
+	})
+	defer timer.Stop()
+	s.ChannelMessageSend(m.ChannelID, "Ok i'll remind you later")
+	time.Sleep(time.Second*time.Duration(itime) + 1)
 }
 
 // Command: .slap
@@ -139,7 +160,7 @@ func atk(m *discordgo.MessageCreate, s *discordgo.Session) {
 }
 
 func rest(m *discordgo.MessageCreate, s *discordgo.Session) {
-	// mostly redundant boilerplate code
+	// TODO mostly redundant boilerplate code (spam filter & timers
 	timeout := 60 * time.Second
 	if m.Author.ID == s.State.User.ID {
 		return
