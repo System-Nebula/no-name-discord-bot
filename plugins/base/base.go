@@ -90,6 +90,8 @@ func lastSeen(m *discordgo.MessageCreate, s *discordgo.Session) {
 }
 
 func reminder(m *discordgo.MessageCreate, s *discordgo.Session) {
+	// TODO handle more than one space
+	message := strings.Fields(m.Content)[2]
 
 	// take the given length of time and create a timer in seconds for the duration
 	stime := strings.Fields(m.Content)[1]
@@ -102,7 +104,8 @@ func reminder(m *discordgo.MessageCreate, s *discordgo.Session) {
 	}
 	timer := time.AfterFunc(time.Second*time.Duration(itime), func() {
 		fmt.Println("timer stopped")
-		s.ChannelMessageSend(m.ChannelID, "It's time to do that thing...")
+
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("It's time to do that thing...%s", message))
 
 	})
 	defer timer.Stop()
